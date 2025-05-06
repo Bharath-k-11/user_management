@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     MINIO_ACCESS_KEY: str = Field(default= "your_minio_access_key", description="Minio access key")
     MINIO_SECRET_KEY: str = Field(default= "your_minio_secret_key", description="Minio secret key")
     MINIO_USE_SSL: bool = Field(default= False, description="Minio use ssl")
-    MINIO_BUCKET_NAME: str = Field(default= "picture", description="Minio bucket name")
+    MINIO_BUCKET_NAME: str = Field(default= "demo", description="Minio bucket name")
     
     class Config:
         # If your .env file is not in the root directory, adjust the path accordingly.
@@ -55,3 +55,4 @@ class Settings(BaseSettings):
 
 # Instantiate settings to be imported in your application
 settings = Settings()
+

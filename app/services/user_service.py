@@ -1,5 +1,6 @@
 from builtins import Exception, bool, classmethod, int, str
 from datetime import datetime, timezone
+from fastapi import HTTPException
 import secrets
 from typing import Optional, Dict, List
 from pydantic import ValidationError
@@ -57,13 +58,13 @@ class UserService:
             existing_user = await cls.get_by_email(session, validated_data['email'])
             if existing_user:
                 logger.error("User with given email already exists.")
-                return None
+                raise HTTPException(status_code=400, detail="Email already exists.")
 
             # Check for provided nickname
             provided_nickname = validated_data.get('nickname')
             if provided_nickname:
                 if await cls.get_by_nickname(session, provided_nickname):
-                    raise ValueError("Nickname already exists. Please try a different one.")
+                    raise HTTPException(status_code=400, detail="Nickname already exists. Please try a different one.")
                 nickname = provided_nickname
             else:
                 nickname = generate_nickname()
@@ -82,19 +83,30 @@ class UserService:
                 new_user.email_verified = True
             else:
                 new_user.verification_token = generate_verification_token()
-                await email_service.send_verification_email(new_user)
 
             session.add(new_user)
             await session.commit()
+            await session.refresh(new_user)  # Ensure user.id is available
+
+            # ✅ Now it's safe to send the verification email
+            if new_user.role != UserRole.ADMIN:
+                await email_service.send_verification_email(new_user)
+
+            logger.info(f"User created: {new_user.email} ({new_user.role})")
             return new_user
 
         except ValidationError as e:
             logger.error(f"Validation error during user creation: {e}")
             return None
 
-        except ValueError as ve:
-            logger.warning(f"User creation failed: {ve}")
-            raise HTTPException(status_code=400, detail=str(ve))
+        except HTTPException as ve:
+            logger.warning(f"User creation failed: {ve.detail}")
+            raise ve
+
+        except Exception as e:
+            logger.exception("Unexpected error during user creation")
+            raise HTTPException(status_code=500, detail="An unexpected error occurred during user creation.")
+
 
 
     @classmethod
@@ -144,10 +156,12 @@ class UserService:
     async def login_user(cls, session: AsyncSession, email: str, password: str) -> Optional[User]:
         user = await cls.get_by_email(session, email)
         if user:
-            if user.email_verified is False:
-                return None
+            if not user.email_verified:
+                raise HTTPException(status_code=403, detail="Email not verified. Please check your inbox for a verification link.")
+
             if user.is_locked:
-                return None
+                raise HTTPException(status_code=403, detail="Your account is locked due to too many failed login attempts.")
+
             if verify_password(password, user.hashed_password):
                 user.failed_login_attempts = 0
                 user.last_login_at = datetime.now(timezone.utc)
@@ -160,7 +174,9 @@ class UserService:
                     user.is_locked = True
                 session.add(user)
                 await session.commit()
-        return None
+
+        raise HTTPException(status_code=401, detail="Incorrect email or password.")
+
 
     @classmethod
     async def is_account_locked(cls, session: AsyncSession, email: str) -> bool:
@@ -186,8 +202,12 @@ class UserService:
         user = await cls.get_by_id(session, user_id)
         if user and user.verification_token == token:
             user.email_verified = True
-            user.verification_token = None  # Clear the token once used
-            user.role = UserRole.AUTHENTICATED
+            user.verification_token = None
+
+            # ✅ Only update role if user was previously anonymous
+            if user.role == UserRole.ANONYMOUS:
+                user.role = UserRole.AUTHENTICATED
+
             session.add(user)
             await session.commit()
             return True

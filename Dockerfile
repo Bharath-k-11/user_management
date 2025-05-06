@@ -1,5 +1,5 @@
 # Define a base stage with a Debian Bookworm base image that includes the latest glibc update
-FROM python:3.12-bookworm as base
+FROM python:3.12-bookworm AS base
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -30,12 +30,9 @@ RUN python -m venv /.venv \
 FROM python:3.12-slim-bookworm as final
 
 # Upgrade libc-bin in the final stage to ensure security patch is applied
-RUN apt-get update && \
-    apt-get install -y --allow-downgrades \
-    perl-base=5.36.0-7+deb12u2 \
-    libc-bin=2.36-9+deb12u10 && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --allow-downgrades libc-bin=2.36-9+deb12u7 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy the virtual environment from the base stage
 COPY --from=base /.venv /.venv
@@ -60,4 +57,4 @@ COPY --chown=myuser:myuser . .
 EXPOSE 8000
 
 # Use ENTRYPOINT to specify the executable when the container starts.
-ENTRYPOINT ["uvicorn", "app.main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["uvicorn", "app.main:app",  "--host", "0.0.0.0", "--port", "8000", "--reload"]

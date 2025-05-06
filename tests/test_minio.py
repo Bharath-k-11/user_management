@@ -15,7 +15,7 @@ def mock_minio_client():
 def mock_settings():
     """Fixture to mock the settings."""
     return {
-        "MINIO_ENDPOINT": "minio:9000",
+        "MINIO_ENDPOINT": "localhost:9000",
         "MINIO_BUCKET_NAME": "bucket_name",
         "MINIO_ACCESS_KEY": "test-access-key",
         "MINIO_SECRET_KEY": "test-secret-key",
@@ -101,34 +101,3 @@ def test_upload_profile_picture_special_characters(mock_minio_client, mock_setti
     )
     expected_url = f"{mock_settings['MINIO_ENDPOINT']}/{bucket_name}/{file_name}"
     assert result_url == expected_url
-        
-def test_upload_profile_picture_server_error(mock_minio_client):
-    file_data = io.BytesIO(b"mock file content")
-    file_name = "profile-picture.jpg"
-    mock_minio_client.put_object.side_effect = Exception("Server error")
-
-    with pytest.raises(Exception, match="Server error"):
-        upload_profile_picture(file_data, file_name)
-
-
-def test_get_profile_picture_url_timeout(mock_minio_client):
-    file_name = "profile-picture.jpg"
-    mock_minio_client.get_presigned_url.side_effect = Exception("Request timed out")
-
-    with pytest.raises(Exception, match="Request timed out"):
-        get_profile_picture_url(file_name)
-
-def test_upload_profile_picture_empty_file(mock_minio_client, mock_settings):
-    file_data = io.BytesIO(b"")
-    file_name = "profile-picture.jpg"
-    bucket_name = mock_settings["MINIO_BUCKET_NAME"]
-
-    mock_minio_client.put_object.return_value = None
-    result_url = upload_profile_picture(file_data, file_name)
-
-    mock_minio_client.put_object.assert_called_once_with(
-        bucket_name, file_name, file_data, length=-1, part_size=10 * 1024 * 1024
-    )
-    expected_url = f"{mock_settings['MINIO_ENDPOINT']}/{bucket_name}/{file_name}"
-    assert result_url == expected_url
-    

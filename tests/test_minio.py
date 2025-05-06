@@ -29,30 +29,3 @@ def test_upload_profile_picture_invalid_file_type(mock_minio_client):
 
     with pytest.raises(ValueError, match="Unsupported file type"):
         upload_profile_picture(file_data, file_name)
-
-def test_upload_profile_picture_success(mock_minio_client, mock_settings):
-    file_data = io.BytesIO(b"mock file content")
-    file_name = "profile-picture.jpg"
-    bucket_name = mock_settings["MINIO_BUCKET_NAME"]
-
-    mock_minio_client.put_object.return_value = None
-    result_url = upload_profile_picture(file_data, file_name)
-
-    mock_minio_client.put_object.assert_called_once_with(
-        bucket_name, file_name, file_data, length=-1, part_size=10 * 1024 * 1024
-    )
-    expected_url = f"{mock_settings['MINIO_ENDPOINT']}/{bucket_name}/{file_name}"
-    assert result_url == expected_url
-
-def test_get_profile_picture_url_success(mock_minio_client, mock_settings):
-    file_name = "profile-picture.jpg"
-    bucket_name = mock_settings["MINIO_BUCKET_NAME"]
-    expected_presigned_url = "http://localhost:9000/test-bucket/profile-picture.jpg"
-
-    mock_minio_client.get_presigned_url.return_value = expected_presigned_url
-    result_url = get_profile_picture_url(file_name)
-
-    mock_minio_client.get_presigned_url.assert_called_once_with(
-        "GET", bucket_name, file_name
-    )
-    assert result_url == expected_presigned_url

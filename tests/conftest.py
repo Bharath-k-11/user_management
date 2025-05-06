@@ -37,6 +37,8 @@ from app.utils.template_manager import TemplateManager
 from app.services.email_service import EmailService
 from app.services.jwt_service import create_access_token
 
+from minio import Minio
+
 fake = Faker()
 
 settings = get_settings()
@@ -45,6 +47,16 @@ engine = create_async_engine(TEST_DATABASE_URL, echo=settings.debug)
 AsyncTestingSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 AsyncSessionScoped = scoped_session(AsyncTestingSessionLocal)
 
+
+
+# Configure MinIO client
+@pytest.fixture
+def minio_client():
+    return Minio("minio:9000",  # Update this to match your host and port
+    access_key="minioadmin",  # Replace with your access key
+    secret_key="minioadmin",  # Replace with your secret key
+    secure=False  # Set to True if using HTTPS
+    )
 
 @pytest.fixture
 def email_service():
@@ -214,17 +226,17 @@ async def manager_user(db_session: AsyncSession):
 @pytest.fixture(scope="function")
 def admin_token(admin_user):
     # Assuming admin_user has an 'id' and 'role' attribute
-    token_data = {"sub": str(admin_user.id), "role": admin_user.role.name}
+    token_data = {"sub": str(admin_user.id), "role": admin_user.role.name, "id": str(admin_user.id)}
     return create_access_token(data=token_data, expires_delta=timedelta(minutes=30))
 
 @pytest.fixture(scope="function")
 def manager_token(manager_user):
-    token_data = {"sub": str(manager_user.id), "role": manager_user.role.name}
+    token_data = {"sub": str(manager_user.id), "role": manager_user.role.name, "id": str(manager_user.id)}
     return create_access_token(data=token_data, expires_delta=timedelta(minutes=30))
 
 @pytest.fixture(scope="function")
 def user_token(user):
-    token_data = {"sub": str(user.id), "role": user.role.name}
+    token_data = {"sub": str(user.id), "role": user.role.name, "id": str(user.id)}
     return create_access_token(data=token_data, expires_delta=timedelta(minutes=30))
 
 @pytest.fixture

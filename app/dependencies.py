@@ -1,6 +1,7 @@
 from builtins import Exception, dict, str
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
+from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import Database
 from app.utils.template_manager import TemplateManager
@@ -8,6 +9,7 @@ from app.services.email_service import EmailService
 from app.services.jwt_service import decode_token
 from settings.config import Settings
 from fastapi import Depends
+from uuid import UUID
 
 def get_settings() -> Settings:
     """Return application settings."""
@@ -17,7 +19,7 @@ def get_email_service() -> EmailService:
     template_manager = TemplateManager()
     return EmailService(template_manager=template_manager)
 
-async def get_db() -> AsyncSession:
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Dependency that provides a database session for each request."""
     async_session_factory = Database.get_session_factory()
     async with async_session_factory() as session:
@@ -38,11 +40,12 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     payload = decode_token(token)
     if payload is None:
         raise credentials_exception
-    user_id: str = payload.get("sub")
+    user_id: str = payload.get("id")
     user_role: str = payload.get("role")
+    user_uuid: UUID = payload.get("user_id")
     if user_id is None or user_role is None:
         raise credentials_exception
-    return {"user_id": user_id, "role": user_role}
+    return {"user_id": user_id, "role": user_role, "user_uuid": user_uuid}
 
 def require_role(role: str):
     def role_checker(current_user: dict = Depends(get_current_user)):

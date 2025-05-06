@@ -5,4 +5,4 @@ qr_codes
 *.sqlite
 .vscode
 .env
-.coverage
+.coverageminio_data/

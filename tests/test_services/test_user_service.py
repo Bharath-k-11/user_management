@@ -5,6 +5,7 @@ from app.dependencies import get_settings
 from app.models.user_model import User, UserRole
 from app.services.user_service import UserService
 from app.utils.nickname_gen import generate_nickname
+from fastapi import HTTPException
 
 pytestmark = pytest.mark.asyncio
 
@@ -124,22 +125,42 @@ async def test_login_user_successful(db_session, verified_user):
 
 # Test user login with incorrect email
 async def test_login_user_incorrect_email(db_session):
-    user = await UserService.login_user(db_session, "nonexistentuser@noway.com", "Password123!")
-    assert user is None
+    with pytest.raises(HTTPException) as exc_info:
+        await UserService.login_user(db_session, "nonexistentuser@noway.com", "Password123!")
+    assert exc_info.value.status_code == 401
+    assert "Incorrect email or password" in exc_info.value.detail
 
 # Test user login with incorrect password
 async def test_login_user_incorrect_password(db_session, user):
-    user = await UserService.login_user(db_session, user.email, "IncorrectPassword!")
-    assert user is None
+    user.email_verified = True
+    user.failed_login_attempts = 0
+    user.is_locked = False
+    db_session.add(user)
+    await db_session.commit()
+
+    with pytest.raises(HTTPException) as exc_info:
+        await UserService.login_user(db_session, user.email, "IncorrectPassword!")
+    assert exc_info.value.status_code == 401
+    assert "Incorrect email or password" in exc_info.value.detail
 
 # Test account lock after maximum failed login attempts
 async def test_account_lock_after_failed_logins(db_session, verified_user):
-    max_login_attempts = get_settings().max_login_attempts
-    for _ in range(max_login_attempts):
+    settings = get_settings()
+    verified_user.email_verified = True
+    verified_user.failed_login_attempts = 0
+    verified_user.is_locked = False
+    db_session.add(verified_user)
+    await db_session.commit()
+
+    for _ in range(settings.max_login_attempts):
+        with pytest.raises(HTTPException) as exc_info:
+            await UserService.login_user(db_session, verified_user.email, "wrongpassword")
+        assert exc_info.value.status_code == 401
+
+    with pytest.raises(HTTPException) as exc_info:
         await UserService.login_user(db_session, verified_user.email, "wrongpassword")
-    
-    is_locked = await UserService.is_account_locked(db_session, verified_user.email)
-    assert is_locked, "The account should be locked after the maximum number of failed login attempts."
+    assert exc_info.value.status_code == 403
+    assert "locked" in exc_info.value.detail.lower()
 
 # Test resetting a user's password
 async def test_reset_password(db_session, user):
@@ -149,8 +170,8 @@ async def test_reset_password(db_session, user):
 
 # Test verifying a user's email
 async def test_verify_email_with_token(db_session, user):
-    token = "valid_token_example"  # This should be set in your user setup if it depends on a real token
-    user.verification_token = token  # Simulating setting the token in the database
+    token = "valid_token_example"  # Simulated token
+    user.verification_token = token
     await db_session.commit()
     result = await UserService.verify_email_with_token(db_session, user.id, token)
     assert result is True
@@ -158,6 +179,6 @@ async def test_verify_email_with_token(db_session, user):
 # Test unlocking a user's account
 async def test_unlock_user_account(db_session, locked_user):
     unlocked = await UserService.unlock_user_account(db_session, locked_user.id)
-    assert unlocked, "The account should be unlocked"
+    assert unlocked is True
     refreshed_user = await UserService.get_by_id(db_session, locked_user.id)
-    assert not refreshed_user.is_locked, "The user should no longer be locked"
+    assert not refreshed_user.is_locked

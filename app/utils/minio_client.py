@@ -40,4 +40,3 @@ def get_profile_picture_url(file_name: str) -> str:
         return minio_client.get_presigned_url("GET", bucket_name, file_name)
     except Exception as e:
         raise e
-

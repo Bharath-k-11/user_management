@@ -1,53 +1,185 @@
+# The User Management System Final Project:
+
+# My Experience with the course and project:
+Enrolling in this course has been an incredibly rewarding and eye-opening journey for me as a budding software engineer. Kicking off with the Advanced Python Calculator App, I developed a solid grasp of writing clean, maintainable Python code while immersing myself in key software engineering principles. Working on this project exposed me to practical uses of design patterns like Facade and Command, maintaining calculation history with Pandas, creating a modular plugin system for future scalability, and configuring robust logging mechanisms using environment variables. Setting up GitHub Actions for continuous testing and ensuring adherence to PEP8 standards allowed me to experience industry-grade development practices firsthand.
+Progressing to the User Management System was a major step up in complexity and scope. This ambitious project challenged me to design and build RESTful APIs using FastAPI, structure data with SQLAlchemy and PostgreSQL, and tackle real-world backend problems like secure authentication, role-based access control, and dynamic search with pagination. Successfully deploying the application using Docker and DockerHub marked a proud milestone, giving me hands-on experience with containerization and modern deployment workflows. The iterative process of debugging, addressing QA feedback, and writing comprehensive tests with Pytest further strengthened my understanding of automated testing and clean version control.
+Both projects provided immersive, practical exposure to backend development, database modeling, testing, and deployment. Beyond technical skills, this course helped me cultivate a logical, solution-driven approach to problem-solving and the confidence to take on intricate, real-world challenges. I now feel well-prepared—and genuinely excited—to apply these capabilities in future roles within software development and data engineering.
+
+# Closed GitHub Issues (QA Improvements):
+
+Issue 1:
+Title: generating-nickname
+Issue Link: Link
+Commit Link: Link
+
+Issue 2:
+Title: strengthening-security
+Issue Link: Link
+Commit Link: Link
+
+Issue 3:
+Title: fix-dockerfile-allow-build
+Issue Link: Link
+Commit Link: Link
+Issue 4:
+Title: profile-picture-url-validation
+Issue Link: Link
+Commit Link: Link
+
+Issue 5:
+Title: validating-password
+Issue Link: Link
+Commit Link: Link
+
+# 10 New Tests Created and Merged:
+
+A Deep Dive into the Profile Picture Upload Feature
+Contributing to this feature was a deeply satisfying and technically enriching experience. I meticulously designed and executed a comprehensive suite of 10+ test cases to thoroughly validate every critical aspect of the profile picture upload functionality. This testing phase not only ensured high reliability and usability but also reinforced seamless integration with the MinIO backend for secure, performant file handling.
+
+Testing Strategy
+Thorough Coverage: From standard operations to edge cases, all scenarios—such as valid uploads, improper file formats, and backend failures—were scrutinized through carefully constructed test cases.
+Robust Validation: Focused on key factors like file type enforcement, size limits, naming conventions, and API consistency.
+Resilient Backend Handling: Tested the MinIO integration with both positive and failure-mode simulations to ensure fault tolerance and graceful degradation.
 
 
-# The User Management System Final Project: Your Epic Coding Adventure Awaits! 🎉✨🔥
+Detailed Test Case Descriptions
+1. Unsupported File Type Upload
+Name: test_upload_profile_picture_invalid_file_type
+Goal: Prevent non-image files from being accepted (e.g., .txt files).
+Expected Result: Raises ValueError stating "Unsupported file type".
+Link Here
 
-## Introduction: Buckle Up for the Ride of a Lifetime 🚀🎬
 
-Welcome to the User Management System project - an epic open-source adventure crafted by the legendary Professor Keith Williams for his rockstar students at NJIT! 🏫👨‍🏫⭐ This project is your gateway to coding glory, providing a bulletproof foundation for a user management system that will blow your mind! 🤯 You'll bridge the gap between the realms of seasoned software pros and aspiring student developers like yourselves. 
+2. Successful File Upload
+Name: test_upload_profile_picture_success
+Goal: Upload a valid .jpg file and verify correct MinIO interaction.
+Expected Result: File uploads successfully; returns valid public URL.
+Link Here
 
-### [Instructor Video - Project Overview and Tips](https://youtu.be/gairLNAp6mA) 🎥
+3. Generate URL for Existing File
+Name: test_get_profile_picture_url_success
+Goal: Retrieve a presigned URL for an existing file.
+Expected Result: Correct URL is returned using MinIO's signing method.
+Link Here
 
-- [Introduction to the system features and overview of the project - please read](system_documentation.md) 📚
-- [Project Setup Instructions](setup.md) ⚒️
-- [Features to Select From](features.md) 🛠️
-- [About the Project](about.md)🔥🌟
+4. Handle Missing File Retrieval
+Name: test_get_profile_picture_url_non_existent_file
+Goal: Confirm proper error handling when a file is not found.
+Expected Result: Raises "File not found" exception.
+Link Here
 
-## Goals and Objectives: Unlock Your Coding Superpowers 🎯🏆🌟
+5. Upload of Large Files
+Name: test_upload_profile_picture_large_file
+Goal: Test upload robustness for a ~20MB file.
+Expected Result: Upload completes without error, with valid URL.
+Link Here
 
-Get ready to ascend to new heights with this legendary project:
+6. Invalid Bucket Scenario
+Name: test_get_profile_picture_url_invalid_bucket
+Goal: Ensure error is raised when accessing an incorrect MinIO bucket.
+Expected Result: Raises "Bucket not found" exception.
+Link Here
 
-1. **Practical Experience**: Dive headfirst into a real-world codebase, collaborate with your teammates, and contribute to an open-source project like a seasoned pro! 💻👩‍💻🔥
-2. **Quality Assurance**: Develop ninja-level skills in identifying and resolving bugs, ensuring your code quality and reliability are out of this world. 🐞🔍⚡
-3. **Test Coverage**: Write additional tests to cover edge cases, error scenarios, and important functionalities - leave no stone unturned and no bug left behind! ✅🧪🕵️‍♂️
-4. **Feature Implementation**: Implement a brand new, mind-blowing feature and make your epic mark on the project, following best practices for coding, testing, and documentation like a true artisan. ✨🚀🎆
-5. **Collaboration**: Foster teamwork and collaboration through code reviews, issue tracking, and adhering to contribution guidelines - teamwork makes the dream work, and together you'll conquer worlds! 🤝💪🌍
-6. **Industry Readiness**: Prepare for the software industry by working on a project that simulates real-world development scenarios - level up your skills to super hero status  and become an unstoppable coding force! 🔝🚀🏆⚡
 
-## Submission and Grading: Your Chance to Shine 📝✏️📈
+7. Special Characters in Filename
+Name: test_upload_profile_picture_special_characters
+Goal: Confirm support for filenames like profile@pic#$.jpg.
+Expected Result: Upload successful; URL reflects original filename.
+Link Here
 
-1. **Reflection Document**: Submit a 1-2 page Word document reflecting on your learnings throughout the course and your experience working on this epic project. Include links to the closed issues for the **5 QA issues, 10 NEW tests, and 1 Feature** you'll be graded on. Make sure your project successfully deploys to DockerHub and include a link to your Docker repository in the document - let your work speak for itself! 📄🔗💥
+8. Simulated Server Error During Upload
+Name: test_upload_profile_picture_server_error
+Goal: Mimic server failure (e.g., timeout, crash) during upload.
+Expected Result: Exception raised with "Server error" message.
+Link Here
 
-2. **Commit History**: Show off your consistent hard work through your commit history like a true coding warrior. **Projects with less than 10 commits will get an automatic 0 - ouch!** 😬⚠️ A significant part of your project's evaluation will be based on your use of issues, commits, and following a professional development process like a boss - prove your coding prowess! 💻🔄🔥
+9. Timeout During URL Generation
+Name: test_get_profile_picture_url_timeout
+Goal: Handle long response times gracefully during URL retrieval.
+Expected Result: Raises exception: "Request timed out".
+Link Here
 
-3. **Deployability**: Broken projects that don't deploy to Dockerhub or pass all the automated tests on GitHub actions will face point deductions - nobody likes a buggy app! 🐞☠️ Show the world your flawless coding skills!
+10. Upload of an Empty File
+Name: test_upload_profile_picture_empty_file
+Goal: Test behavior with a 0-byte file.
+Expected Result: File uploads successfully and returns a valid URL.
+Link Here
 
-## Managing the Project Workload: Stay Focused, Stay Victorious ⏱️🧠⚡
+Overall Impact
+These test cases not only enhanced the reliability and resilience of the profile picture upload system but also bolstered the integrity of the MinIO integration. From backend robustness to edge-case coverage, the testing effort ensured the feature is both production-ready and maintainable.
 
-This project requires effective time management and a well-planned strategy, but fear not - you've got this! Follow these steps to ensure a successful (and sane!) project outcome:
 
-1. **Select a Feature**: [Choose a feature](features.md) from the provided list of additional improvements that sparks your interest and aligns with your goals like a laser beam. ✨⭐🎯 This is your chance to shine!
+# Feature:- Profile Picture Upload via MinIO Integration
+To enhance the user experience and personalization within the user management system, a robust profile picture upload feature was implemented. Leveraging MinIO, a high-performance distributed object storage system, this feature enables users to securely upload and retrieve their profile pictures. It adds a visually engaging and personal dimension to user profiles while ensuring efficiency, scalability, and clean integration with existing APIs.
 
-2. **Quality Assurance (QA)**: Thoroughly test the system's major functionalities related to your chosen feature and identify at least 5 issues or bugs like a true detective. Create GitHub issues for each identified problem, providing detailed descriptions and steps to reproduce - the more detail, the merrier! 🔍🐞🕵️‍♀️ Leave no stone unturned!
+Implementation Details
+API Endpoint for Uploading Images
+Developed a dedicated POST endpoint specifically for handling profile picture uploads.
+The endpoint validates:
+Image format (Supports: .jpeg, .png, .gif)
+File size (Limited to 5MB to ensure fast and efficient uploads)
+MinIO Integration
+Configured MinIO within the system using Docker to handle object storage.
+Each uploaded file is assigned a unique key, preventing filename collisions or overwrites.
+Images are uploaded using MinIO's Python SDK, and presigned URLs are generated for controlled access.
+User Model Enhancement
+The user schema was extended to include a field for the profile picture URL.
+Existing API responses were updated to include this field, ensuring front-end compatibility.
+Image Retrieval Logic
+When a user's profile is fetched, the system:
+Checks if a custom profile image exists.
+Returns a presigned URL from MinIO for secure, temporary access.
+Falls back to a default placeholder image if no upload is present.
 
-3. **Test Coverage Improvement**: Review the existing test suite and identify gaps in test coverage like a pro. Create 10 additional tests to cover edge cases, error scenarios, and important functionalities related to your chosen feature. Focus on areas such as user registration, login, authorization, and database interactions. Simulate the setup of the system as the admin user, then creating users, and updating user accounts - leave no stone unturned, no bug left behind! ✅🧪🔍🔬 Become the master of testing!
 
-4. **New Feature Implementation**: Implement your chosen feature, following the project's coding practices and architecture like a coding ninja. Write appropriate tests to ensure your new feature is functional and reliable like a rock. Document the new feature, including its usage, configuration, and any necessary migrations - future you will thank you profusely! 🚀✨📝👩‍💻⚡ Make your mark on this project!
+# Testing & Validation Strategy
 
-5. **Maintain a Working Main Branch**: Throughout the project, ensure you always have a working main branch deploying to Docker like a well-oiled machine. This will prevent any last-minute headaches and ensure a smooth submission process - no tears allowed, only triumphs! 😊🚢⚓ Stay focused, stay victorious!
+Unit Tests: Covered all critical paths—file validation, upload success, and retrieval logic.
+Integration Tests: Simulated real user flows to verify the full pipeline from file upload to profile rendering.
+Tests ensure:
+Invalid files (unsupported types or oversized uploads) are gracefully rejected.
+Accurate error messaging enhances usability.
+The feature remains stable under expected usage conditions.
 
-Remember, it's more important to make something work reliably and be reasonably complete than to implement an overly complex feature. Focus on creating a feature that you can build upon or demonstrate in an interview setting - show off your skills like a rockstar! 💪🚀🎓
+Key Considerations
+Security: MinIO access is tightly controlled via credentials; HTTPS is used for secure communication.
+Validation: Strong input validation ensures only supported files are stored.
+Performance: Optimizations such as optional image resizing and buffering improve load times and minimize bandwidth.
+Scalability: Built to handle large volumes of requests and file uploads without performance degradation.
+Fallback Strategy: Defaults to a generic profile image when no picture is uploaded—ensuring visual consistency.
 
-Don't forget to always have a working main branch deploying to Docker at all times. If you always have a working main branch, you will never be in jeopardy of receiving a very disappointing grade :-). Keep that main branch shining bright!
+Key Validation Benefits
+Guarantees only valid content is processed and stored.
+Prevents storage bloat from unsupported or oversized files.
+Enhances reliability and UX by delivering clear, actionable error messages.
+Promotes maintainability and confidence with high test coverage.
 
-Let's embark on this epic coding adventure together and conquer the world of software engineering! You've got this, coding rockstars! 🚀🌟✨
+Step-by-Step Setup
+MinIO with Docker
+From your project root, run:
+docker-compose up
+Install Dependencies
+pip install minio fastapi uvicorn python-multipart
+Initialize MinIO Client
+Create and configure a MinIO client to connect and check for bucket availability.
+Create Upload Endpoint
+Implement an endpoint like /upload-profile-picture/ that:
+Accepts image files via multipart/form-data
+Stores the image in MinIO's demo bucket
+Returns a direct or presigned URL to access the uploaded image
+Update User Schema
+Add a profile_picture_url field in the User model and schema.
+Extend User APIs
+Include the new image URL in relevant endpoints like GET /me and PUT /update-profile.
+Presigned URL Retrieval
+Generate time-limited URLs for image access to prevent unauthorized use.
+
+Expected Output
+After running the implementation and uploading a .jpeg file via the provided endpoint, the image will be stored in the MinIO demo bucket and retrievable through a secure presigned URL—visible both via API response and within the MinIO web console.
+
+
+
+
+
+Github: Link
+Docker: Link
